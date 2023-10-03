@@ -129,9 +129,66 @@ fn merge_arrays<T: Ord>(mut left: Vec<T>, mut right: Vec<T>) -> Vec<T> {
     result
 }
 
+fn quick_sort_v2<T: Ord>(mut collection: Vec<T>) -> Vec<T> {
+    if collection.len() <= 1 {
+        return collection;
+    }
+
+    let capacity = (collection.len() / 2 + collection.len() % 2);
+
+    let mut left = Vec::with_capacity(capacity);
+    let mut right = Vec::with_capacity(capacity);
+
+    let mut iterator = collection.into_iter();
+
+    let pivot = iterator.next().unwrap();
+
+    while let Some(element) = iterator.next() {
+        if element < pivot {
+            left.push(element);
+        } else {
+            right.push(element);
+        }
+    }
+
+    let mut left = quick_sort_v2(left);
+    let right = quick_sort_v2(right);
+
+    left.push(pivot);
+    left.extend(right);
+
+    left
+}
+
+fn quick_sort<T: PartialOrd>(collection: &mut [T]) {
+    if collection.len() <=1 {
+        return;
+    }
+
+    let pivot = get_pivot(collection);
+
+    let (left, right) = collection.split_at_mut(pivot);
+
+    quick_sort(left);
+    quick_sort(&mut right[1..]);
+}
+
+fn get_pivot<T: PartialOrd>(collection: &mut [T]) -> usize {
+    let mut pivot = 0;
+
+    for i in 1..collection.len() {
+        if collection[i] < collection[pivot]{
+            collection.swap(pivot +1, i);
+            collection.swap(pivot, pivot +1);
+            pivot +1;
+        }
+    }
+    pivot
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{bubble_sort, bubble_sort_v2, merge_sort};
+    use crate::{bubble_sort, bubble_sort_v2, merge_sort, quick_sort, quick_sort_v2};
 
     #[test]
     fn test_bubble_sort() {
@@ -150,5 +207,21 @@ mod tests {
         let sorted = vec![1, 2, 3, 4, 5, 6, 7, 7, 88, 100, 100000, 400000000];
 
         assert_eq!(merge_sort(array), sorted);
+    }
+
+    #[test]
+    fn quick_sort_test() {
+        let array = vec![100000, 100, 7, 6, 88, 5, 400000000, 1, 2, 3, 4, 7];
+        let sorted = vec![1, 2, 3, 4, 5, 6, 7, 7, 88, 100, 100000, 400000000];
+
+        assert_eq!(quick_sort_v2(array), sorted);
+
+
+        let mut array = vec![100000, 100, 7, 6, 88, 5, 400000000, 1, 2, 3, 4, 7];
+        let sorted = vec![1, 2, 3, 4, 5, 6, 7, 7, 88, 100, 100000, 400000000];
+
+        quick_sort(&mut array[..]);
+        assert_eq!(array, sorted);
+
     }
 }
