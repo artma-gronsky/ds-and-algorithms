@@ -1,3 +1,5 @@
+mod b_rand;
+
 use std::mem::swap;
 
 fn bubble_sort<T>(collection: &[T]) -> Vec<T>
@@ -174,7 +176,9 @@ fn quick_sort<T: PartialOrd>(collection: &mut [T]) {
 }
 
 fn get_pivot<T: PartialOrd>(collection: &mut [T]) -> usize {
-    let mut pivot = 0;
+    let mut pivot = b_rand::rand(collection.len());
+    collection.swap(pivot, 0);
+    pivot = 0;
 
     for i in 1..collection.len() {
         if collection[i] < collection[pivot]{
