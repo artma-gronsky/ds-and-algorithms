@@ -1,6 +1,5 @@
 mod b_rand;
-
-use std::mem::swap;
+use std::thread;
 
 fn bubble_sort<T>(collection: &[T]) -> Vec<T>
 where
@@ -163,7 +162,7 @@ fn quick_sort_v2<T: Ord>(mut collection: Vec<T>) -> Vec<T> {
 }
 
 fn quick_sort<T: PartialOrd>(collection: &mut [T]) {
-    if collection.len() <=1 {
+    if collection.len() <= 1 {
         return;
     }
 
@@ -181,18 +180,38 @@ fn get_pivot<T: PartialOrd>(collection: &mut [T]) -> usize {
     pivot = 0;
 
     for i in 1..collection.len() {
-        if collection[i] < collection[pivot]{
-            collection.swap(pivot +1, i);
-            collection.swap(pivot, pivot +1);
-            pivot +1;
+        if collection[i] < collection[pivot] {
+            collection.swap(pivot + 1, i);
+            collection.swap(pivot, pivot + 1);
+            pivot + 1;
         }
     }
     pivot
 }
 
+fn thread_quick_sort<T: Send + 'static + PartialOrd>(collection: &mut [T]) {
+    if collection.len() <= 1 {
+        return;
+    }
+
+    let pivot = get_pivot(collection);
+
+    let (left, right) = collection.split_at_mut(pivot);
+
+    thread::scope(|scope| {
+        let h  = scope.spawn(|| {
+            thread_quick_sort(left);
+        });
+
+        thread_quick_sort(&mut right[1..]);
+    });
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{bubble_sort, bubble_sort_v2, merge_sort, quick_sort, quick_sort_v2};
+    use crate::{
+        bubble_sort, bubble_sort_v2, merge_sort, quick_sort, quick_sort_v2, thread_quick_sort,
+    };
 
     #[test]
     fn test_bubble_sort() {
@@ -220,12 +239,19 @@ mod tests {
 
         assert_eq!(quick_sort_v2(array), sorted);
 
-
         let mut array = vec![100000, 100, 7, 6, 88, 5, 400000000, 1, 2, 3, 4, 7];
         let sorted = vec![1, 2, 3, 4, 5, 6, 7, 7, 88, 100, 100000, 400000000];
 
         quick_sort(&mut array[..]);
         assert_eq!(array, sorted);
+    }
 
+    #[test]
+    fn threader_quick_sort_test() {
+        let mut array = vec![100000, 100, 7, 6, 88, 5, 400000000, 1, 2, 3, 4, 7];
+        let sorted = vec![1, 2, 3, 4, 5, 6, 7, 7, 88, 100, 100000, 400000000];
+
+        thread_quick_sort(&mut array[..]);
+        assert_eq!(array, sorted);
     }
 }
