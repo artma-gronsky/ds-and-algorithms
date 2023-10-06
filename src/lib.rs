@@ -1,4 +1,6 @@
 mod b_rand;
+pub mod linked_list;
+
 use std::thread;
 
 fn bubble_sort<T>(collection: &[T]) -> Vec<T>
@@ -199,7 +201,7 @@ fn thread_quick_sort<T: Send + 'static + PartialOrd>(collection: &mut [T]) {
     let (left, right) = collection.split_at_mut(pivot);
 
     thread::scope(|scope| {
-        let h  = scope.spawn(|| {
+        let h = scope.spawn(|| {
             thread_quick_sort(left);
         });
 
